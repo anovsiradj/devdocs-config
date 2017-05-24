@@ -1,0 +1,108 @@
+<!--
+Rab Mei 24 12:28:35 WIB 2017
+anovsiradj
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8"/>
+	<title>DevDocs.io</title>
+</head>
+<body>
+
+<div>
+	<button id="button-save-json">Save Config (devdocs.json)</button>
+</div>
+<hr/>
+
+<!-- input-reference: https://stackoverflow.com/a/32884324 -->
+<form id="form-load-json" action="javascript:void(0)">
+	<input type="file" name="data" accept=".json" required/>
+	<button type="submit">Load Config</button>
+</form>
+<hr/>
+
+<pre id="echo"></pre>
+
+<!-- reference: https://github.com/Thibaut/devdocs/blob/master/assets/javascripts/vendor/cookies.js -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.4/js.cookie.min.js"></script>
+
+<script>
+;(function(undefined) {
+
+;(function() {
+	return;
+
+	// reference: https://github.com/Thibaut/devdocs/issues/483#issuecomment-247868835
+	// copy of my offline devdocs.io web. using "copy(document.cookie)".
+	var example_devdocs_cookies = '_gauges_unique_month=1; _gauges_unique_year=1; _gauges_unique=1; dark=1; tips=KeyNav; docs=apache_http_server/bootstrap~3/codeception/codeigniter~3/css/dom/dom_events/drupal~8/git/html/http/javascript/jquery/jquerymobile/jqueryui/lodash~4/markdown/npm/php/phpunit~5/sqlite/symfony~2.8/twig~2/typescript/vue~2/webpack~2/yarn/yii~2.0; schema=10; hideIntro=1; _gauges_unique_day=1; _gauges_unique_hour=1; _ga=GA1.2.2000797283.1495100306; _gid=GA1.2.1011066316.1495603077; count=39; news=1494720000000; version=1495489421';
+
+	// reference: http://devdocs.io/dom/document/cookie
+	// set cookie 1 by 1
+	var example_devdocs_cookies_array = example_devdocs_cookies.split(';');
+	for (var i = example_devdocs_cookies_array.length - 1; i >= 0; i--) {
+		document.cookie = example_devdocs_cookies_array[i];
+	}
+});
+
+// ==================================================
+
+var button = document.getElementById('button-save-json');
+button.addEventListener('click', devdocs_get_cookie);
+
+var object_cookies = {};
+var to_export_cookies = ['docs', 'dark', 'hideIntro'];
+
+function devdocs_get_cookie() {
+	for (var i = to_export_cookies.length - 1; i >= 0; i--) {
+		var k = to_export_cookies[i];
+		var v = Cookies.get(to_export_cookies[i]);
+		if (typeof v === undefined) return;
+		object_cookies[k] = v;
+	}
+
+	// mixed-reference: https://stackoverflow.com/questions/2897619/using-html5-javascript-to-generate-and-save-a-file
+	var json_cookies = JSON.stringify(object_cookies);
+	var blob_cookies = new Blob([JSON.stringify(object_cookies)], {type : 'application/json'});
+
+	var a = document.createElement('a');
+	a.href = URL.createObjectURL(blob_cookies);
+	a.download = 'devdocs.json';
+	a.style = 'display:none;';
+
+	document.body.appendChild(a); // based on my experience, this element need to plug to dom first, before call any event.
+	a.addEventListener('click', a.remove);
+	a.click();
+}
+
+// ==================================================
+
+var form = document.getElementById('form-load-json');
+form.addEventListener('submit', devdocs_set_cookie);
+
+function devdocs_set_cookie() {
+	if (form.elements.data.files[0] === undefined) return;
+	if (/(text\/x\-json|application\/json)/.test(form.elements.data.files[0].type) === false) return;
+
+	var file = form.elements.data.files[0];
+
+	var reader = new FileReader();
+	reader.onload = function() {
+		var content = JSON.parse(reader.result);
+		for (var o in content) {
+			if (to_export_cookies.indexOf(o) >= 0) {
+				Cookies.set(o, content[o]);
+			}
+		}
+
+		console.log(content);
+
+		alert('success'); // end.
+	};
+	reader.readAsText(file);
+}
+
+})();
+</script>
+</body>
+</html>
